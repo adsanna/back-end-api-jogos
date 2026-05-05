@@ -11,6 +11,7 @@ import com.backend.apiJogos.models.Game;
 import com.backend.apiJogos.repositorys.GameRepository;
 import com.backend.apiJogos.services.interfaces.GameService;
 
+import lombok.RequiredArgsConstructor;
 import com.backend.apiJogos.exceptionHandler.exceptions.GameNotFoundException;
 
 @Service
