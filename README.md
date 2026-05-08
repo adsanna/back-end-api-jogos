@@ -321,9 +321,4 @@ mvn spring-boot:run
 
 Após testar a aplicação, acesse a documentação Swagger:
 
-```txt
-http://localhost:8080/swagger-ui/index.html
-```
-
-```
-```
+[🔗 Testar API no Swagger](http://localhost:35555/swagger-ui/index.html#/)
