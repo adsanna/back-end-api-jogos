@@ -19,13 +19,13 @@ public class UserGameDto {
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   private UUID id;
 
-  @NotNull
+  @NotNull(message = "userId não pode ser nulo!")
   private UUID userId;
 
-  @NotNull
+  @NotNull(message = "gameId não pode ser nulo!")
   private UUID gameId;
 
-  @NotNull
+  @NotNull(message = "Status não pode ser nulo!")
   private Status status;
 
   @DecimalMin(value = "0.0", inclusive = true)

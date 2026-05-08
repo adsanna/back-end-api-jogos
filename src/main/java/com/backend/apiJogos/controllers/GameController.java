@@ -9,33 +9,44 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import com.backend.apiJogos.dtos.GameDto;
-import com.backend.apiJogos.services.interfaces.GameService;
+import com.backend.apiJogos.services.impls.GameServiceImpl;
 
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/games")
 public class GameController {
-    private final GameService gameService;
+    private final GameServiceImpl gameServiceImpl;
 
-    public GameController(GameService gameService){
-        this.gameService = gameService;
+    public GameController(GameServiceImpl gameServiceImpl){
+        this.gameServiceImpl = gameServiceImpl;
     }
+
     @PostMapping
-    public GameDto criar(@RequestBody @Valid GameDto gameDto){
-        return gameService.criar(gameDto);
+    public ResponseEntity<?> criar(@RequestBody @Valid GameDto gameDto, BindingResult bd){
+        if(bd.hasErrors()){
+            return ResponseEntity.badRequest().body(bd.getAllErrors());
+        }
+        GameDto gameSalvo = gameServiceImpl.criar(gameDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(gameSalvo);
     }
+
     @GetMapping
-    public List<GameDto> listar(){
-        return gameService.listar();
+    public ResponseEntity<List<GameDto>> listar(){
+        List<GameDto> gameDtos = gameServiceImpl.listar();
+        return ResponseEntity.ok(gameDtos);
     }
+
     @GetMapping("/buscar-id/{id}")
-    public GameDto buscarPorId(@PathVariable UUID id){
-       return gameService.buscarPorId(id);
+    public ResponseEntity<?> buscarPorId(@PathVariable UUID id){
+       GameDto gameDto = gameServiceImpl.buscarPorId(id);
+       return ResponseEntity.ok().body(gameDto);
     }
+
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable UUID id){
-        gameService.deletar(id);
+    public ResponseEntity<?> deletar(@PathVariable UUID id){
+        gameServiceImpl.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 
   @PutMapping("/{id}")
@@ -43,15 +54,13 @@ public class GameController {
     if(br.hasErrors()){
       return ResponseEntity.badRequest().body(br.getAllErrors());
     }
-
-    GameDto gameEditado = gameService.editar(id, gameDto);
-
+    GameDto gameEditado = gameServiceImpl.editar(id, gameDto);
     return ResponseEntity.status(HttpStatus.OK).body(gameEditado);
   }
 
   @GetMapping("/buscar-nome/{nome}")
   public ResponseEntity<List<GameDto>> buscarPorNome(@PathVariable String nome){
-    List<GameDto> lista = gameService.buscarPorNome(nome);
+    List<GameDto> lista = gameServiceImpl.buscarPorNome(nome);
     return ResponseEntity.ok(lista);
 
   }

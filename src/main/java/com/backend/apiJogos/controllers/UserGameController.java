@@ -3,10 +3,13 @@ package com.backend.apiJogos.controllers;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import com.backend.apiJogos.dtos.UserGameDto;
-import com.backend.apiJogos.services.interfaces.UserGameService;
+import com.backend.apiJogos.services.impls.UserGameServiceImpl;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,31 +19,42 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserGameController {
 
-    private final UserGameService service;
+    private final UserGameServiceImpl userGameServiceImpl;
 
     @PostMapping
-    public UserGameDto criar(@RequestBody @Valid UserGameDto dto) {
-        return service.criar(dto);
+    public ResponseEntity<?> criar(@RequestBody @Valid UserGameDto userGameDto, BindingResult bd){
+        if(bd.hasErrors()){
+            return ResponseEntity.badRequest().body(bd.getAllErrors());
+        }
+        UserGameDto userGameSalvo = userGameServiceImpl.criar(userGameDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userGameSalvo);
     }
 
     @GetMapping
-    public List<UserGameDto> listar() {
-        return service.listar();
+    public ResponseEntity<List<UserGameDto>> listar(){
+        List<UserGameDto> userGameDtos = userGameServiceImpl.listar();
+        return ResponseEntity.ok(userGameDtos);
     }
 
-    @GetMapping("/{id}")
-    public UserGameDto buscar(@PathVariable UUID id) {
-        return service.buscarPorId(id);
+    @GetMapping("/buscar-id/{id}")
+    public ResponseEntity<?> buscarPorId(@PathVariable UUID id){
+       UserGameDto userGameDto = userGameServiceImpl.buscarPorId(id);
+       return ResponseEntity.ok().body(userGameDto);
     }
 
     @PutMapping("/{id}")
-    public UserGameDto editar(@PathVariable UUID id,
-                              @RequestBody @Valid UserGameDto dto) {
-        return service.editar(id, dto);
+  public ResponseEntity<?> editar(@RequestBody @Valid UserGameDto userGameDto, BindingResult br, @PathVariable UUID id){
+    if(br.hasErrors()){
+      return ResponseEntity.badRequest().body(br.getAllErrors());
     }
+    UserGameDto userGameEditado = userGameServiceImpl.editar(id, userGameDto);
+    return ResponseEntity.status(HttpStatus.OK).body(userGameEditado);
+  }
 
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable UUID id) {
-        service.deletar(id);
+    public ResponseEntity<?> deletar(@PathVariable UUID id){
+        userGameServiceImpl.deletar(id);
+        return ResponseEntity.noContent().build();
     }
+
 }

@@ -9,33 +9,44 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import com.backend.apiJogos.dtos.UserDto;
-import com.backend.apiJogos.services.interfaces.UserService;
+import com.backend.apiJogos.services.impls.UserServiceImpl;
 
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserService userService;
+    private final UserServiceImpl userService;
 
-    public UserController(UserService userService){
-        this.userService = userService;
+    public UserController(UserServiceImpl userServiceImpl){
+    this.userService = userServiceImpl;
     }
+
     @PostMapping
-    public UserDto criar(@RequestBody UserDto userDto){
-        return userService.criarUsuario(userDto);
+    public ResponseEntity<?> criar(@RequestBody @Valid UserDto userDto, BindingResult bd){
+        if(bd.hasErrors()){
+            return ResponseEntity.badRequest().body(bd.getAllErrors());
+        }
+        UserDto userSalvo = userService.criarUsuario(userDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userSalvo);
     }
+
     @GetMapping
-    public List<UserDto> listar(){
-        return userService.listarUsuarios();
+    public ResponseEntity<List<UserDto>> listar(){
+        List<UserDto> userDtos = userService.listarUsuarios();
+        return ResponseEntity.ok(userDtos);
     }
+
     @GetMapping("/buscar-id/{id}")
-    public UserDto buscarPorId(@PathVariable UUID id){
-       return userService.buscarPorId(id);
-    }
+    public ResponseEntity<?> buscarPorId(@PathVariable UUID id){
+       UserDto UserDto = userService.buscarPorId(id);
+       return ResponseEntity.ok().body(UserDto);
+  }
+
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable UUID id){
+    public ResponseEntity<?> deletar(@PathVariable UUID id){
         userService.deletarUsuario(id);
+        return ResponseEntity.noContent().build();
     }
 
   @PutMapping("/{id}")
@@ -43,9 +54,7 @@ public class UserController {
     if(br.hasErrors()){
       return ResponseEntity.badRequest().body(br.getAllErrors());
     }
-
     UserDto userEditado = userService.editarPorId(uDto, id);
-
     return ResponseEntity.status(HttpStatus.OK).body(userEditado);
   }
 

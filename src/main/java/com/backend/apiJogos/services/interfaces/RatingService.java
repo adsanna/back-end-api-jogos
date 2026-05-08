@@ -4,6 +4,6 @@ import com.backend.apiJogos.dtos.RatingDto;
 
 public interface RatingService {
 
-    void criar(RatingDto ratingDto);
+    RatingDto criar(RatingDto ratingDto);
 
 }

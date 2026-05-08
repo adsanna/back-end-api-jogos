@@ -1,172 +1,324 @@
-# API Jogos - Backend
-
-Uma API REST desenvolvida em Spring Boot para gerenciar usuários e jogos com tratamento robusto de exceções.
-
----
-
-## Estrutura do Projeto
-
-```
-src/main/java/com/backend/apiJogos/
-├── controllers/          # Endpoints da API
-│   ├── UserController.java
-│   └── GameController.java
-├── dtos/                 # Data Transfer Objects
-│   ├── UserDto.java
-│   └── GameDto.java
-├── models/               # Entidades do banco de dados
-│   ├── User.java
-│   └── Game.java
-├── services/             # Lógica de negócio
-│   ├── interfaces/
-│   │   ├── UserService.java
-│   │   └── GameService.java
-│   └── impls/
-│       ├── UserServiceImpl.java
-│       └── GameServiceImpl.java
-├── repositorys/          # Acesso a dados
-│   ├── UserRepository.java
-│   └── GameRepository.java
-└── exceptionHandler/     # Tratamento centralizado de exceções
-    ├── exceptions/       # Classes de exceção customizadas
-    │   ├── UserJaCadastradoException.java
-    │   ├── UserNotFoundException.java
-    │   ├── GameNotFoundException.java
-    │   └── InvalidUserDataException.java
-    ├── formatter/        # Formatação de respostas de erro
-    │   └── RestErrorMensagem.java
-    └── treatment/        # Handler global de exceções
-        └── GlobalExceptionHandler.java
-```
+# Projeto-Back-End-Api-de-Jogos
+Sistema backend focado no gerenciamento de jogos e no rastreamento da experiência individual dos usuários através de múltiplas runs.
 
 ---
 
-## Tratamento de Exceções
+## Sumário
 
-### Exceções Customizadas Criadas
-
-#### 1. **UserJaCadastradoException**
-- **Cenário**: Usuário tenta criar ou editar com um nome que já existe
-- **Status HTTP**: `409 Conflict`
-- **Mensagem padrão**: "Este nome ja esta em uso!!!"
-
-#### 2. **UserNotFoundException**
-- **Cenário**: Busca, edição ou deleção de usuário inexistente
-- **Status HTTP**: `404 Not Found`
-- **Mensagem padrão**: "Usuário não encontrado"
-
-#### 3. **GameNotFoundException**
-- **Cenário**: Busca, edição ou deleção de jogo inexistente
-- **Status HTTP**: `404 Not Found`
-- **Mensagem padrão**: "Game não encontrado"
-
-#### 4. **InvalidUserDataException** *Nova*
-- **Cenário**: Dados inválidos (valores nulos, vazios, etc.)
-- **Status HTTP**: `400 Bad Request`
-- **Casos de uso**:
-  - Nome do usuário nulo ou vazio
-  - ID do usuário nulo
-  - Parâmetros de busca inválidos
+- [Equipe do Projeto](#equipe-do-projeto)
+- [Visão geral](#visão-geral)
+- [Solução esperada](#solução-esperada)
+- [Informações complementares](#informações-complementares)
+- [Regras de negócio](#regras-de-negócio)
+  - [Enum de Status](#enum-de-status)
+  - [GAME (Catálogo)](#game-catálogo)
+  - [USER_GAME (Run)](#user_game-run)
+  - [numeroRun](#numerorun)
+  - [Regras por Status](#regras-por-status)
+  - [Regras de Consistência](#regras-de-consistência)
+  - [RATING](#rating)
+- [Modelagem do banco](#modelagem-do-banco)
+- [Ferramentas utilizadas](#ferramentas-utilizadas)
+- [Como testar a API localmente](#como-testar-a-api-localmente)
+  - [Pré-requisitos](#pré-requisitos)
+  - [Instalando e iniciando o projeto](#instalando-e-iniciando-o-projeto)
+  - [Testando a API](#testando-a-api)
 
 ---
 
-## Validações Implementadas
+## Equipe do Projeto
 
-### UserServiceImpl
-
-| Método | Validações | Exceções Lançadas |
-|--------|-----------|-------------------|
-| **criarUsuario()** | ✓ Valida se userDto é nulo<br>✓ Valida se nome é nulo/vazio<br>✓ Verifica duplicidade de nome | `InvalidUserDataException`<br>`UserJaCadastradoException` |
-| **editarPorId()** | ✓ Valida se ID é nulo<br>✓ Valida se nome é nulo/vazio<br>✓ Verifica existência do usuário<br>✓ Verifica duplicidade (exceto se mesmo nome) | `InvalidUserDataException`<br>`UserNotFoundException`<br>`UserJaCadastradoException` |
-| **buscarPorId()** | ✓ Verifica existência do usuário | `UserNotFoundException` |
-| **deletarUsuario()** | ✓ Valida se ID é nulo<br>✓ Verifica existência antes de deletar | `InvalidUserDataException`<br>`UserNotFoundException` |
-| **buscarPorNome()** | ✓ Valida se nome é nulo/vazio | `InvalidUserDataException` |
-| **listarUsuarios()** | ✓ Sem validações (retorna lista vazia) | Nenhuma |
+| Integrante | Matrícula |
+|---|---|
+| Ricardo Azevedo | 01834551 |
+| Francileidy Conceição | 01837744 |
+| Anna Beatriz | 01849891 |
+| Grazielle Diniz | 01831671 |
+| Adrielly Kauany | 01835056 |
 
 ---
 
-## GlobalExceptionHandler
+## Visão geral:
+O sistema permite que usuários registrem jogos e acompanhem suas experiências individuais com cada título. Cada tentativa de jogar um jogo é representada por uma entidade chamada `USER_GAME` (run).
 
-Classe centralizada que intercepta todas as exceções e formata respostas consistentes.
+A modelagem separa:
 
-```java
-@ControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-    
-    @ExceptionHandler(UserJaCadastradoException.class)
-    // Retorna 409 Conflict
-    
-    @ExceptionHandler(UserNotFoundException.class)
-    // Retorna 404 Not Found
-    
-    @ExceptionHandler(GameNotFoundException.class)
-    // Retorna 404 Not Found
-    
-    @ExceptionHandler(InvalidUserDataException.class)
-    // Retorna 400 Bad Request
-    
-    @ExceptionHandler(RuntimeException.class)
-    // Retorna 500 Internal Server Error (catch-all)
-}
-```
+- Dados globais do jogo (`GAME`)
+- Experiência individual do usuário (`USER_GAME`)
+
+Essa separação evita duplicação de dados, mantém o sistema escalável e permite evolução das regras de negócio sem comprometer a estrutura principal.
 
 ---
 
-## Formato de Resposta de Erro
+## Solução esperada:
+O sistema deve permitir que usuários:
 
-Todas as exceções retornam um objeto `RestErrorMensagem`:
+- registrem jogos em um catálogo global
+- iniciem múltiplas runs de um mesmo jogo
+- acompanhem status de progresso
+- armazenem horas jogadas
+- finalizem ou abandonem runs
+- avaliem experiências concluídas
 
-```json
-{
-    "status": 400,
-    "mensagem": "Nome do usuário não pode ser nulo ou vazio"
-}
-```
+As regras de negócio devem garantir integridade dos dados e impedir inconsistências comuns em CRUDs simples.
 
----
-
-## Endpoints Principais
-
-### Usuários
-- `POST /users` - Criar usuário (com validações)
-- `GET /users` - Listar todos
-- `GET /users/buscar-id/{id}` - Buscar por ID
-- `GET /users/buscar-nome/{nome}` - Buscar por nome
-- `PUT /users/{id}` - Editar usuário
-- `DELETE /users/{id}` - Deletar usuário
-
-### Jogos
-- `POST /games` - Criar jogo
-- `GET /games` - Listar todos
-- `GET /games/buscar-id/{id}` - Buscar por ID
-- `GET /games/buscar-nome/{nome}` - Buscar por nome
-- `PUT /games/{id}` - Editar jogo
-- `DELETE /games/{id}` - Deletar jogo
+O sistema deve manter histórico completo das experiências do usuário sem sobrescrever runs anteriores.
 
 ---
 
-## Como Executar
+## Informações complementares:
+A arquitetura do sistema foi projetada separando entidades globais de entidades relacionadas à experiência individual do usuário.
+
+A entidade `GAME` representa exclusivamente informações universais do jogo, enquanto `USER_GAME` representa a relação do usuário com aquele título.
+
+A complexidade do sistema está concentrada principalmente na camada de serviço, responsável por:
+
+- validação de regras
+- consistência dos status
+- controle de múltiplas runs
+- validação de avaliações
+- proteção contra estados inválidos
+
+Essa abordagem mantém a modelagem limpa, organizada e extensível.
+
+---
+
+## Regras de negócio
+
+### Enum de Status
+
+Os status possíveis de uma run são:
+
+- BACKLOG
+- JOGANDO
+- FINALIZADO
+- DROPADO
+
+---
+
+### GAME (Catálogo)
+
+#### Regras:
+
+- `nome` é obrigatório
+- `genero` é opcional
+- não armazena progresso do usuário
+
+---
+
+### USER_GAME (Run)
+
+Representa uma tentativa concreta de jogar um jogo.
+
+#### Campos:
+
+- `numeroRun`
+- `status`
+- `horasJogadas`
+- `dataInicio`
+- `dataFim`
+
+---
+
+### numeroRun
+
+#### Regras:
+
+- deve ser inteiro maior ou igual a `1`
+- valor padrão: `1`
+- nunca pode ser nulo
+
+#### Fluxo:
+
+- primeira run:
+  - `numeroRun = 1`
+
+- ao rejogar:
+  - criar novo `USER_GAME`
+  - `numeroRun = última run + 1`
+
+Runs anteriores nunca devem ser sobrescritas.
+
+---
+
+### Regras por Status
+
+#### BACKLOG
+
+- representa jogo ainda não iniciado
+- `dataInicio` deve ser nula
+- `dataFim` deve ser nula
+- `horasJogadas` deve ser `0` ou nula
+
+---
+
+#### JOGANDO
+
+- `dataInicio` é obrigatória
+- `horasJogadas` deve ser maior ou igual a `0`
+- `horasJogadas` pode ser atualizada
+
+---
+
+#### FINALIZADO
+
+- `dataInicio` é obrigatória
+- `dataFim` é obrigatória
+- `horasJogadas` deve ser maior que `0`
+- `horasJogadas` torna-se imutável
+
+---
+
+#### DROPADO
+
+- `dataInicio` deve existir caso o jogo tenha sido iniciado
+- `dataFim` é opcional
+- `horasJogadas` deve ser maior ou igual a `0`
+
+---
+
+### Regras de Consistência
+
+- um usuário não pode possuir mais de uma run `JOGANDO` para o mesmo jogo
+- cada combinação (`user_id`, `game_id`, `numeroRun`) deve ser única
+- `dataFim` deve ser maior ou igual a `dataInicio`
+
+---
+
+### RATING
+
+#### Regras:
+
+- `nota` deve estar entre `0` e `10`
+- só pode existir caso o `USER_GAME` esteja `FINALIZADO`
+- cada `USER_GAME` pode possuir apenas uma avaliação
+
+---
+
+## Modelagem do banco
+
+```mermaid
+erDiagram
+
+    USER ||--o{ USER_GAME : possui
+    GAME ||--o{ USER_GAME : referencia
+    USER_GAME ||--|| RATING : possui
+
+    USER {
+        int id PK
+        string nome
+    }
+
+    GAME {
+        int id PK
+        string nome
+        string genero
+    }
+
+    USER_GAME {
+        int id PK
+        int user_id FK
+        int game_id FK
+        int numero_run
+        enum status
+        decimal horas_jogadas
+        date data_inicio
+        date data_fim
+    }
+
+    RATING {
+        int id PK
+        int nota
+        int user_game_id FK
+    }
+````
+
+
+## Ferramentas utilizadas:
+
+| Spring                                                                                                                           | Java                                                                                                                         | Maven                                                                                                                                 | MySQL                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg" height="60"/></div> | <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" height="60"/></div> | <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/maven/maven-original.svg" height="60"/></div> | <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" height="60"/></div> |
+| Spring Boot 3.x                                                                                                                  | OpenJDK 21                                                                                                                   | Apache Maven 3.9.x                                                                                                                    | MySQL 8 / MariaDB                                                                                                                     |
+
+---
+
+## Como testar a API localmente
+
+## Pré-requisitos
+
+Antes de rodar a API, certifique-se de possuir instalado e configurado:
+
+* OpenJDK 21
+* Apache Maven 3.9+
+* MySQL 8 ou MariaDB
+
+> **Observação:** MariaDB é compatível com MySQL.
+
+---
+
+## Instalando e iniciando o projeto
+
+### Clone o repositório
 
 ```bash
-# Compilar o projeto
-./mvnw clean compile
-
-# Executar a aplicação
-./mvnw clean spring-boot:run
-
-# Executar testes
-./mvnw test
+git clone https://github.com/ricardoo-azevedo/back-end-api-jogos.git
 ```
 
 ---
 
-## Dependências Principais
+### Crie o banco de dados
 
-- Spring Boot Web
-- Spring Data JPA
-- Lombok
-- Jakarta Validation
+Antes de iniciar a aplicação, crie manualmente um banco chamado:
+
+```sql
+CREATE DATABASE apiJogosBD;
+```
+
+Você pode criar utilizando:
+
+- MySQL Workbench
+- DBeaver
+- terminal MySQL
+- phpMyAdmin
 
 ---
 
+### Configure o banco de dados
 
+Entre na pasta:
+
+```txt
+src/main/resources
+```
+
+Abra o arquivo:
+
+```txt
+application.properties
+```
+
+Altere usuário e senha:
+
+```properties
+spring.datasource.username=usuario
+spring.datasource.password=suasenha
+```
+
+---
+
+### Rode a API
+
+Abra o terminal na raiz do projeto e execute:
+
+```bash
+mvn spring-boot:run
+```
+
+---
+
+## Testando a API
+
+Após testar a aplicação, acesse a documentação Swagger:
+
+[🔗 Testar API no Swagger](http://localhost:35555/swagger-ui/index.html#/)

@@ -11,6 +11,13 @@ import com.backend.apiJogos.dtos.UserGameDto;
 import com.backend.apiJogos.models.*;
 import com.backend.apiJogos.repositorys.*;
 import com.backend.apiJogos.services.interfaces.UserGameService;
+import com.backend.apiJogos.exceptionHandler.exceptions.DatasException;
+import com.backend.apiJogos.exceptionHandler.exceptions.GameNotFoundException;
+import com.backend.apiJogos.exceptionHandler.exceptions.HorasException;
+import com.backend.apiJogos.exceptionHandler.exceptions.StatusException;
+import com.backend.apiJogos.exceptionHandler.exceptions.RunEmAndamentoException;
+import com.backend.apiJogos.exceptionHandler.exceptions.RunNaoEncontradaException;
+import com.backend.apiJogos.exceptionHandler.exceptions.UserNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,14 +33,14 @@ public class UserGameServiceImpl implements UserGameService {
   public UserGameDto criar(UserGameDto dto) {
 
     User user = userRepo.findById(dto.getUserId())
-        .orElseThrow(() -> new RuntimeException("User não encontrado"));
+        .orElseThrow(() -> new UserNotFoundException());
 
     Game game = gameRepo.findById(dto.getGameId())
-        .orElseThrow(() -> new RuntimeException("Game não encontrado"));
+        .orElseThrow(() -> new GameNotFoundException("Game não encontrado"));
 
     if (dto.getStatus() == Status.JOGANDO &&
         repo.existsByUserIdAndGameIdAndStatus(user.getId(), game.getId(), Status.JOGANDO)) {
-      throw new RuntimeException("Já existe uma run em andamento");
+      throw new RunEmAndamentoException();
     }
 
     UserGameDto normalized = normalizarCreate(dto);
@@ -64,19 +71,19 @@ public class UserGameServiceImpl implements UserGameService {
   @Override
   public UserGameDto buscarPorId(UUID id) {
     return map(repo.findById(id)
-        .orElseThrow(() -> new RuntimeException("Run não encontrada")));
+        .orElseThrow(() -> new RunNaoEncontradaException()));
   }
 
   @Override
   public UserGameDto editar(UUID id, UserGameDto dto) {
 
     UserGame entity = repo.findById(id)
-        .orElseThrow(() -> new RuntimeException("Run não encontrada"));
+        .orElseThrow(() -> new RunNaoEncontradaException());
 
     if (entity.getStatus() == Status.FINALIZADO &&
         dto.getHorasJogadas() != null &&
         dto.getHorasJogadas().compareTo(entity.getHorasJogadas()) != 0) {
-      throw new RuntimeException("Horas não podem ser alteradas após FINALIZADO");
+      throw new HorasException("Horas não podem ser alterada apos FINALIZADO");
     }
 
     if (Status.JOGANDO.equals(dto.getStatus())
@@ -86,7 +93,7 @@ public class UserGameServiceImpl implements UserGameService {
             entity.getGame().getId(),
             Status.JOGANDO)) {
 
-      throw new RuntimeException("Já existe outra run em andamento");
+      throw new RunEmAndamentoException();
     }
 
     validarTransicao(entity.getStatus(), dto.getStatus());
@@ -111,45 +118,45 @@ public class UserGameServiceImpl implements UserGameService {
 
     if (dto.getHorasJogadas() != null &&
         dto.getHorasJogadas().compareTo(BigDecimal.ZERO) < 0) {
-      throw new RuntimeException("Horas não podem ser negativas");
+      throw new HorasException("Horas não podem ser negativas");
     }
 
     if (dto.getDataInicio() != null && dto.getDataFim() != null &&
         dto.getDataFim().isBefore(dto.getDataInicio())) {
-      throw new RuntimeException("dataFim não pode ser antes da dataInicio");
+      throw new DatasException("dataFim não pode ser antes da dataInicio");
     }
 
     switch (dto.getStatus()) {
 
       case BACKLOG -> {
         if (dto.getDataInicio() != null || dto.getDataFim() != null || dto.getHorasJogadas() != null) {
-          throw new RuntimeException("BACKLOG não pode ter datas ou horas");
+          throw new StatusException("BACKLOG não pode ter datas ou horas");
         }
       }
 
       case JOGANDO -> {
         if (dto.getDataInicio() == null) {
-          throw new RuntimeException("JOGANDO precisa de dataInicio");
+          throw new StatusException("JOGANDO precisa de dataInicio");
         }
         if (dto.getDataFim() != null) {
-          throw new RuntimeException("JOGANDO não pode ter dataFim");
+          throw new StatusException("JOGANDO não pode ter dataFim");
         }
       }
 
       case FINALIZADO -> {
         if (dto.getDataInicio() == null || dto.getDataFim() == null) {
-          throw new RuntimeException("FINALIZADO precisa de datas");
+          throw new StatusException("FINALIZADO precisa de datas");
         }
         if (dto.getHorasJogadas() == null ||
             dto.getHorasJogadas().compareTo(BigDecimal.ZERO) <= 0) {
-          throw new RuntimeException("FINALIZADO precisa de horas > 0");
+          throw new StatusException("FINALIZADO precisa de horas > 0");
         }
       }
 
       case DROPADO -> {
         if (dto.getHorasJogadas() != null &&
             dto.getHorasJogadas().compareTo(BigDecimal.ZERO) < 0) {
-          throw new RuntimeException("DROPADO não aceita horas negativas");
+          throw new StatusException("DROPADO não aceita horas negativas");
         }
       }
     }
@@ -164,23 +171,23 @@ public class UserGameServiceImpl implements UserGameService {
 
       case BACKLOG -> {
         if (novo != Status.JOGANDO) {
-          throw new RuntimeException("BACKLOG só pode ir para JOGANDO");
+          throw new StatusException("BACKLOG só pode ir para JOGANDO");
         }
       }
 
       case JOGANDO -> {
         if (novo != Status.FINALIZADO && novo != Status.DROPADO) {
-          throw new RuntimeException("JOGANDO só pode ir para FINALIZADO ou DROPADO");
+          throw new StatusException("JOGANDO só pode ir para FINALIZADO ou DROPADO");
         }
       }
 
       case FINALIZADO -> {
-        throw new RuntimeException("Não é permitido alterar após FINALIZADO");
+        throw new StatusException("Não é permitido alterar após FINALIZADO");
       }
 
       case DROPADO -> {
         if (novo != Status.JOGANDO) {
-          throw new RuntimeException("DROPADO só pode voltar para JOGANDO");
+          throw new StatusException("DROPADO só pode voltar para JOGANDO");
         }
       }
     }
@@ -195,7 +202,7 @@ public class UserGameServiceImpl implements UserGameService {
     }
 
     if (dto.getStatus() == Status.JOGANDO && dto.getDataFim() != null) {
-      throw new RuntimeException("JOGANDO não pode ter dataFim");
+      throw new StatusException("JOGANDO não pode ter dataFim");
     }
 
     return dto;
