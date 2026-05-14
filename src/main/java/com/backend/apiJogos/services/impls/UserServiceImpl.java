@@ -1,7 +1,6 @@
 package com.backend.apiJogos.services.impls;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -47,7 +46,7 @@ public class UserServiceImpl implements UserService{
 }
 
  @Override
- public UserDto buscarPorId(UUID id){
+ public UserDto buscarPorId(Long id){
     User user = userRepository.findById(id)
           .orElseThrow(() -> new UserNotFoundException());
     
@@ -55,7 +54,7 @@ public class UserServiceImpl implements UserService{
  } 
 
  @Override
- public void deletarUsuario(UUID id){
+ public void deletarUsuario(Long id){
      if(id == null){
        throw new InvalidUserDataException("ID do usuário não pode ser nulo");
      }
@@ -68,7 +67,7 @@ public class UserServiceImpl implements UserService{
  }
 
 @Override
-public UserDto editarPorId(UserDto userDto, UUID id) {
+public UserDto editarPorId(UserDto userDto, Long id) {
     if(id == null){
       throw new InvalidUserDataException("ID do usuário não pode ser nulo");
     }

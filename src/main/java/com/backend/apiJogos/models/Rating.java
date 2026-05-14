@@ -8,7 +8,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,8 +19,8 @@ import lombok.Setter;
 public class Rating {
 
  @Id
- @GeneratedValue(strategy = GenerationType.UUID)
- private UUID id;
+ @GeneratedValue(strategy = GenerationType.AUTO)
+ private Long id;
 
  private Integer nota;
 

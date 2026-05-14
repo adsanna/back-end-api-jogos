@@ -1,7 +1,6 @@
 package com.backend.apiJogos.controllers;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,13 +36,13 @@ public class UserGameController {
     }
 
     @GetMapping("/buscar-id/{id}")
-    public ResponseEntity<?> buscarPorId(@PathVariable UUID id){
+    public ResponseEntity<?> buscarPorId(@PathVariable Long id){
        UserGameDto userGameDto = userGameServiceImpl.buscarPorId(id);
        return ResponseEntity.ok().body(userGameDto);
     }
 
     @PutMapping("/{id}")
-  public ResponseEntity<?> editar(@RequestBody @Valid UserGameDto userGameDto, BindingResult br, @PathVariable UUID id){
+  public ResponseEntity<?> editar(@RequestBody @Valid UserGameDto userGameDto, BindingResult br, @PathVariable Long id){
     if(br.hasErrors()){
       return ResponseEntity.badRequest().body(br.getAllErrors());
     }
@@ -52,7 +51,7 @@ public class UserGameController {
   }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletar(@PathVariable UUID id){
+    public ResponseEntity<?> deletar(@PathVariable Long id){
         userGameServiceImpl.deletar(id);
         return ResponseEntity.noContent().build();
     }

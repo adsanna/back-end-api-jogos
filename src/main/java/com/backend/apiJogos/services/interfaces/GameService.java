@@ -1,7 +1,6 @@
 package com.backend.apiJogos.services.interfaces;
 
 import java.util.List;
-import java.util.UUID;
 
 import com.backend.apiJogos.dtos.GameDto;
 
@@ -10,11 +9,11 @@ public interface GameService {
 
     List<GameDto> listar();
 
-    GameDto buscarPorId(UUID id);
+    GameDto buscarPorId(Long id);
 
-    void deletar(UUID id);
+    void deletar(Long id);
 
-    GameDto editar(UUID id, GameDto gameDto);
+    GameDto editar(Long id, GameDto gameDto);
 
     List<GameDto> buscarPorNome(String nome);
 

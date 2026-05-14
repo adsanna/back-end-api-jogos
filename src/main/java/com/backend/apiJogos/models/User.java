@@ -1,6 +1,5 @@
 package com.backend.apiJogos.models;
 
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,8 +24,8 @@ import lombok.ToString;
 
 public class User {
     @Id
-@GeneratedValue(strategy = GenerationType.UUID)
-private UUID id;
+@GeneratedValue(strategy = GenerationType.AUTO)
+private Long id;
 
 @Column(nullable = false)
 private String nome;

@@ -2,7 +2,6 @@ package com.backend.apiJogos.dtos;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 import com.backend.apiJogos.models.Status;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,13 +16,13 @@ import lombok.*;
 public class UserGameDto {
 
   @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private UUID id;
+  private Long id;
 
   @NotNull(message = "userId não pode ser nulo!")
-  private UUID userId;
+  private Long userId;
 
   @NotNull(message = "gameId não pode ser nulo!")
-  private UUID gameId;
+  private Long gameId;
 
   @NotNull(message = "Status não pode ser nulo!")
   private Status status;

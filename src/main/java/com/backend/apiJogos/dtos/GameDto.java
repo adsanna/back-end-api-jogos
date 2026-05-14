@@ -1,6 +1,5 @@
 package com.backend.apiJogos.dtos;
 
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -18,7 +17,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class GameDto {
      @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-     private UUID id;
+     private Long id;
 
      @NotNull(message = "O nome não pode ser nulo")
      private String nome;

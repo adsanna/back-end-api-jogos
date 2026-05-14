@@ -2,7 +2,6 @@ package com.backend.apiJogos.services.impls;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -69,13 +68,13 @@ public class UserGameServiceImpl implements UserGameService {
   }
 
   @Override
-  public UserGameDto buscarPorId(UUID id) {
+  public UserGameDto buscarPorId(Long id) {
     return map(repo.findById(id)
         .orElseThrow(() -> new RunNaoEncontradaException()));
   }
 
   @Override
-  public UserGameDto editar(UUID id, UserGameDto dto) {
+  public UserGameDto editar(Long id, UserGameDto dto) {
 
     UserGame entity = repo.findById(id)
         .orElseThrow(() -> new RunNaoEncontradaException());
@@ -110,7 +109,7 @@ public class UserGameServiceImpl implements UserGameService {
   }
 
   @Override
-  public void deletar(UUID id) {
+  public void deletar(Long id) {
     repo.deleteById(id);
   }
 

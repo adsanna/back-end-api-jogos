@@ -1,7 +1,6 @@
 package com.backend.apiJogos.services.impls;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -35,18 +34,18 @@ public List<GameDto> listar(){
    .collect(Collectors.toList());
 }
 @Override
-public GameDto buscarPorId(UUID id){
+public GameDto buscarPorId(Long id){
     Game game = gameRepository.findById(id)
            .orElseThrow(() -> new GameNotFoundException());
 
     return new GameDto(game.getId(), game.getNome(), game.getGenero());
 }
 @Override
-public void deletar(UUID id){
+public void deletar(Long id){
     gameRepository.deleteById(id);
 }
 @Override
-public GameDto editar(UUID id, GameDto gameDto){
+public GameDto editar(Long id, GameDto gameDto){
     Game game = gameRepository.findById(id)
            .orElseThrow(() -> new GameNotFoundException());
         

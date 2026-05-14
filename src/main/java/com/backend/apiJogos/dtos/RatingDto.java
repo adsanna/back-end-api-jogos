@@ -1,6 +1,5 @@
 package com.backend.apiJogos.dtos;
  
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -19,13 +18,13 @@ import lombok.ToString;
 public class RatingDto {
 
  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
- private UUID id;
+ private Long id;
 
  @NotNull(message = "nota não deve ser nula!")
  private Integer nota;
 
  @NotNull(message = "UserGameId não deve ser nulo!")
- private UUID userGameId;
+ private Long userGameId;
 
 
 }

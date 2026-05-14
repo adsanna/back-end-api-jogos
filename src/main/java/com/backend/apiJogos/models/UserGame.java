@@ -2,7 +2,6 @@ package com.backend.apiJogos.models;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,8 +16,8 @@ import lombok.*;
 public class UserGame {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  private UUID id;
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private Long id;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
