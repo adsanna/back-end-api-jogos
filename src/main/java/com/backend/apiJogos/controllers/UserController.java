@@ -55,7 +55,8 @@ public class UserController {
   }
 
   @GetMapping("/buscar-nome/{nome}")
-  public ResponseEntity<java.util.List<UserPublicDto>> buscarPorNome(@PathVariable String nome, @AuthenticationPrincipal Jwt jwt) {
+  public ResponseEntity<java.util.List<UserPublicDto>> buscarPorNome(@PathVariable String nome,
+      @AuthenticationPrincipal Jwt jwt) {
     return ResponseEntity.ok(userService.buscarPorNome(nome, jwt));
   }
 
