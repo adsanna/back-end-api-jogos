@@ -1,6 +1,6 @@
 package com.backend.apiJogos.dtos;
 
-
+import com.backend.apiJogos.models.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.NotNull;
@@ -26,4 +26,7 @@ public class UserDto {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String supabaseUserId;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Role role;
 }

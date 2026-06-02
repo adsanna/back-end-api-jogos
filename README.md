@@ -1,35 +1,31 @@
 # Projeto-Back-End-Api-de-Jogos
-Sistema backend focado no gerenciamento de jogos e no rastreamento da experiência individual dos usuários através de múltiplas runs.
+
+Sistema backend para gerenciamento de jogos, acompanhamento de múltiplas runs, avaliações, autenticação JWT via Supabase e controle de acesso baseado em roles.
 
 ---
 
 ## Sumário
 
 - [Equipe do Projeto](#equipe-do-projeto)
-- [Visão geral](#visão-geral)
-- [Solução esperada](#solução-esperada)
-- [Informações complementares](#informações-complementares)
-- [Regras de negócio](#regras-de-negócio)
-  - [Enum de Status](#enum-de-status)
-  - [GAME (Catálogo)](#game-catálogo)
-  - [USER_GAME (Run)](#user_game-run)
-  - [numeroRun](#numerorun)
-  - [Regras por Status](#regras-por-status)
-  - [Regras de Consistência](#regras-de-consistência)
-  - [RATING](#rating)
-- [Modelagem do banco](#modelagem-do-banco)
-- [Ferramentas utilizadas](#ferramentas-utilizadas)
-- [Como testar a API localmente](#como-testar-a-api-localmente)
-  - [Pré-requisitos](#pré-requisitos)
-  - [Instalando e iniciando o projeto](#instalando-e-iniciando-o-projeto)
-  - [Testando a API](#testando-a-api)
+- [Visão Geral](#visao-geral)
+- [Arquitetura da Aplicação](#arquitetura-da-aplicacao)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Segurança e Autenticação](#seguranca-e-autenticacao)
+- [Controle de Acesso (Roles)](#controle-de-acesso-roles)
+- [Isolamento de Dados](#isolamento-de-dados)
+- [Regras de Negócio](#regras-de-negocio)
+- [Modelagem do Banco](#modelagem-do-banco)
+- [Endpoints](#endpoints)
+- [Tratamento Global de Exceções](#tratamento-global-de-excecoes)
+- [Swagger](#swagger)
+- [Como Executar Localmente](#como-executar-localmente)
 
 ---
 
 ## Equipe do Projeto
 
 | Integrante | Matrícula |
-|---|---|
+|------------|------------|
 | Ricardo Azevedo | 01834551 |
 | Francileidy Conceição | 01837744 |
 | Anna Beatriz | 01849891 |
@@ -38,56 +34,242 @@ Sistema backend focado no gerenciamento de jogos e no rastreamento da experiênc
 
 ---
 
-## Visão geral:
-O sistema permite que usuários registrem jogos e acompanhem suas experiências individuais com cada título. Cada tentativa de jogar um jogo é representada por uma entidade chamada `USER_GAME` (run).
+## Visão Geral
 
-A modelagem separa:
+A API foi desenvolvida para registrar jogos e acompanhar a experiência individual dos usuários ao longo do tempo.
 
-- Dados globais do jogo (`GAME`)
-- Experiência individual do usuário (`USER_GAME`)
+O sistema permite:
 
-Essa separação evita duplicação de dados, mantém o sistema escalável e permite evolução das regras de negócio sem comprometer a estrutura principal.
+- catálogo global de jogos
+- múltiplas runs para um mesmo jogo
+- acompanhamento de progresso
+- controle de horas jogadas
+- avaliações
+- autenticação via JWT
+- autorização baseada em papéis (USER e ADMIN)
 
----
-
-## Solução esperada:
-O sistema deve permitir que usuários:
-
-- registrem jogos em um catálogo global
-- iniciem múltiplas runs de um mesmo jogo
-- acompanhem status de progresso
-- armazenem horas jogadas
-- finalizem ou abandonem runs
-- avaliem experiências concluídas
-
-As regras de negócio devem garantir integridade dos dados e impedir inconsistências comuns em CRUDs simples.
-
-O sistema deve manter histórico completo das experiências do usuário sem sobrescrever runs anteriores.
+O foco principal da aplicação é garantir integridade dos dados, isolamento entre usuários e aplicação consistente das regras de negócio.
 
 ---
 
-## Informações complementares:
-A arquitetura do sistema foi projetada separando entidades globais de entidades relacionadas à experiência individual do usuário.
+## Arquitetura da Aplicação
 
-A entidade `GAME` representa exclusivamente informações universais do jogo, enquanto `USER_GAME` representa a relação do usuário com aquele título.
+A aplicação segue arquitetura em camadas:
 
-A complexidade do sistema está concentrada principalmente na camada de serviço, responsável por:
+```text
+Controller
+↓
+Service
+↓
+Repository
+↓
+Banco de Dados
+```
 
-- validação de regras
-- consistência dos status
-- controle de múltiplas runs
-- validação de avaliações
-- proteção contra estados inválidos
+### Controllers
 
-Essa abordagem mantém a modelagem limpa, organizada e extensível.
+Responsáveis por receber requisições HTTP e retornar respostas REST.
+
+### Services
+
+Centralizam toda a lógica de negócio do sistema.
+
+### Repositories
+
+Realizam acesso ao banco utilizando Spring Data JPA.
+
+### DTOs
+
+Controlam os dados enviados e recebidos pela API.
+
+### Security
+
+Responsável pela autenticação JWT e autorização baseada em roles.
+
+### Exception Handler
+
+Centraliza e padroniza os erros retornados pela API.
 
 ---
 
-## Regras de negócio
+## Tecnologias Utilizadas
 
-### Enum de Status
+- Java 21
+- Spring Boot 3
+- Spring Security
+- OAuth2 Resource Server
+- JWT
+- Supabase Auth
+- Spring Data JPA
+- Hibernate
+- MySQL / MariaDB
+- Swagger OpenAPI
+- Lombok
+- Maven
 
-Os status possíveis de uma run são:
+---
+
+## Segurança e Autenticação
+
+A autenticação é realizada através de JWT emitido pelo Supabase.
+
+Fluxo:
+
+```text
+Usuário
+↓
+Supabase Auth
+↓
+JWT
+↓
+Spring Security
+↓
+API
+```
+
+Todos os endpoints protegidos exigem:
+
+```http
+Authorization: Bearer <token>
+```
+
+Quando o token estiver ausente, inválido ou expirado:
+
+```http
+401 Unauthorized
+```
+
+---
+
+## Controle de Acesso (Roles)
+
+### USER
+
+Permissões:
+
+- gerenciar próprio perfil
+- criar runs
+- editar runs
+- remover runs
+- criar avaliações
+- editar avaliações
+- buscar usuários por nome
+
+### ADMIN
+
+Possui todas as permissões de USER e também:
+
+- criar jogos
+- editar jogos
+- remover jogos
+- listar usuários
+- alterar roles
+
+### Regra Especial
+
+Um administrador não pode remover sua própria role ADMIN.
+
+---
+
+## Isolamento de Dados
+
+O sistema utiliza o identificador único fornecido pelo Supabase:
+
+```text
+supabaseUserId
+```
+
+Toda operação relacionada a:
+
+- UserGame
+- Rating
+
+é automaticamente filtrada pelo usuário autenticado.
+
+Isso impede acesso a dados de terceiros.
+
+---
+
+## Regras de Negócio
+
+### Usuários
+
+#### Criação Automática
+
+No primeiro acesso autenticado:
+
+- usuário é criado automaticamente
+- role inicial é USER
+- supabaseUserId é armazenado
+
+#### Perfil
+
+O usuário pode alterar apenas seu próprio nome.
+
+#### Busca por Nome
+
+Usuários autenticados podem buscar outros usuários.
+
+O retorno utiliza UserPublicDto:
+
+```json
+{
+  "id": 1,
+  "nome": "Ricardo"
+}
+```
+
+Sem exposição de:
+
+- role
+- supabaseUserId
+
+---
+
+### Games
+
+#### Regras
+
+- nome obrigatório
+- gênero opcional
+- leitura pública
+- criação, edição e remoção apenas por ADMIN
+
+---
+
+### UserGame (Run)
+
+Representa uma tentativa concreta de jogar um jogo.
+
+Campos:
+
+- numeroRun
+- status
+- horasJogadas
+- dataInicio
+- dataFim
+
+---
+
+### numeroRun
+
+Primeira run:
+
+```text
+numeroRun = 1
+```
+
+Nova tentativa:
+
+```text
+numeroRun = última run + 1
+```
+
+Runs antigas nunca são sobrescritas.
+
+---
+
+### Status
 
 - BACKLOG
 - JOGANDO
@@ -96,106 +278,69 @@ Os status possíveis de uma run são:
 
 ---
 
-### GAME (Catálogo)
-
-#### Regras:
-
-- `nome` é obrigatório
-- `genero` é opcional
-- não armazena progresso do usuário
-
----
-
-### USER_GAME (Run)
-
-Representa uma tentativa concreta de jogar um jogo.
-
-#### Campos:
-
-- `numeroRun`
-- `status`
-- `horasJogadas`
-- `dataInicio`
-- `dataFim`
-
----
-
-### numeroRun
-
-#### Regras:
-
-- deve ser inteiro maior ou igual a `1`
-- valor padrão: `1`
-- nunca pode ser nulo
-
-#### Fluxo:
-
-- primeira run:
-  - `numeroRun = 1`
-
-- ao rejogar:
-  - criar novo `USER_GAME`
-  - `numeroRun = última run + 1`
-
-Runs anteriores nunca devem ser sobrescritas.
-
----
-
 ### Regras por Status
 
 #### BACKLOG
 
-- representa jogo ainda não iniciado
-- `dataInicio` deve ser nula
-- `dataFim` deve ser nula
-- `horasJogadas` deve ser `0` ou nula
-
----
+- sem datas
+- sem horas
 
 #### JOGANDO
 
-- `dataInicio` é obrigatória
-- `horasJogadas` deve ser maior ou igual a `0`
-- `horasJogadas` pode ser atualizada
-
----
+- dataInicio obrigatória
+- dataFim proibida
 
 #### FINALIZADO
 
-- `dataInicio` é obrigatória
-- `dataFim` é obrigatória
-- `horasJogadas` deve ser maior que `0`
-- `horasJogadas` torna-se imutável
-
----
+- dataInicio obrigatória
+- dataFim obrigatória
+- horas > 0
+- horas tornam-se imutáveis
 
 #### DROPADO
 
-- `dataInicio` deve existir caso o jogo tenha sido iniciado
-- `dataFim` é opcional
-- `horasJogadas` deve ser maior ou igual a `0`
+- permite retorno para JOGANDO
 
 ---
 
-### Regras de Consistência
+### Transições Permitidas
 
-- um usuário não pode possuir mais de uma run `JOGANDO` para o mesmo jogo
-- cada combinação (`user_id`, `game_id`, `numeroRun`) deve ser única
-- `dataFim` deve ser maior ou igual a `dataInicio`
+```text
+BACKLOG -> JOGANDO
+
+JOGANDO -> FINALIZADO
+JOGANDO -> DROPADO
+
+DROPADO -> JOGANDO
+```
+
+Não permitido:
+
+```text
+FINALIZADO -> qualquer outro status
+```
 
 ---
 
-### RATING
+### Consistência
 
-#### Regras:
-
-- `nota` deve estar entre `0` e `10`
-- só pode existir caso o `USER_GAME` esteja `FINALIZADO`
-- cada `USER_GAME` pode possuir apenas uma avaliação
+- apenas uma run JOGANDO por jogo
+- dataFim não pode ser anterior à dataInicio
+- horas não podem ser negativas
 
 ---
 
-## Modelagem do banco
+### Rating
+
+Regras:
+
+- nota entre 0 e 10
+- apenas para jogos FINALIZADOS
+- apenas uma avaliação por run
+
+---
+
+## Modelagem do Banco
 
 ```mermaid
 erDiagram
@@ -205,20 +350,22 @@ erDiagram
     USER_GAME ||--|| RATING : possui
 
     USER {
-        int id PK
+        bigint id PK
         string nome
+        string supabase_user_id
+        enum role
     }
 
     GAME {
-        int id PK
+        bigint id PK
         string nome
         string genero
     }
 
     USER_GAME {
-        int id PK
-        int user_id FK
-        int game_id FK
+        bigint id PK
+        string supabase_user_id
+        bigint game_id FK
         int numero_run
         enum status
         decimal horas_jogadas
@@ -227,98 +374,138 @@ erDiagram
     }
 
     RATING {
-        int id PK
+        bigint id PK
         int nota
-        int user_game_id FK
+        bigint user_game_id FK
     }
-````
-
-
-## Ferramentas utilizadas:
-
-| Spring                                                                                                                           | Java                                                                                                                         | Maven                                                                                                                                 | MySQL                                                                                                                                 |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg" height="60"/></div> | <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" height="60"/></div> | <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/maven/maven-original.svg" height="60"/></div> | <div align="center"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/mysql/mysql-original.svg" height="60"/></div> |
-| Spring Boot 3.x                                                                                                                  | OpenJDK 21                                                                                                                   | Apache Maven 3.9.x                                                                                                                    | MySQL 8 / MariaDB                                                                                                                     |
-
----
-
-## Como testar a API localmente
-
-## Pré-requisitos
-
-Antes de rodar a API, certifique-se de possuir instalado e configurado:
-
-* OpenJDK 21
-* Apache Maven 3.9+
-* MySQL 8 ou MariaDB
-
-> **Observação:** MariaDB é compatível com MySQL.
-
----
-
-## Instalando e iniciando o projeto
-
-### Clone o repositório
-
-```bash
-git clone https://github.com/ricardoo-azevedo/back-end-api-jogos.git
 ```
 
 ---
 
-### Crie o banco de dados
+## Endpoints
 
-Antes de iniciar a aplicação, crie manualmente um banco chamado:
+### Games
+
+| Método | Endpoint | Acesso |
+|----------|----------|----------|
+| GET | /games | Público |
+| GET | /games/buscar-id/{id} | Público |
+| GET | /games/buscar-nome/{nome} | Público |
+| POST | /games | ADMIN |
+| PUT | /games/{id} | ADMIN |
+| DELETE | /games/{id} | ADMIN |
+
+### Users
+
+| Método | Endpoint | Acesso |
+|----------|----------|----------|
+| GET | /users/me | Autenticado |
+| PUT | /users/me | Autenticado |
+| DELETE | /users/me | Autenticado |
+| GET | /users | ADMIN |
+| GET | /users/buscar-nome/{nome} | Autenticado |
+| PATCH | /users/{id}/role | ADMIN |
+
+### User Games
+
+| Método | Endpoint |
+|----------|----------|
+| POST | /user-games |
+| GET | /user-games |
+| GET | /user-games/buscar-id/{id} |
+| PUT | /user-games/{id} |
+| DELETE | /user-games/{id} |
+
+### Ratings
+
+| Método | Endpoint |
+|----------|----------|
+| POST | /rating |
+| GET | /rating |
+| GET | /rating/{id} |
+| PUT | /rating/{id} |
+| DELETE | /rating/{id} |
+
+---
+
+## Tratamento Global de Exceções
+
+| Exceção | HTTP |
+|----------|----------|
+| UserNotFoundException | 404 |
+| GameNotFoundException | 404 |
+| AccessDeniedException | 403 |
+| InvalidUserDataException | 400 |
+| RunEmAndamentoException | 409 |
+| RatingException | 409 |
+| StatusException | 409 |
+| DatasException | 409 |
+| HorasException | 409 |
+
+Formato padrão:
+
+```json
+{
+  "status": 409,
+  "mensagem": "Descrição do erro"
+}
+```
+
+---
+
+## Swagger
+
+Após iniciar a aplicação:
+
+```text
+http://localhost:35555/swagger-ui/index.html
+```
+
+Para acessar endpoints protegidos:
+
+1. Obtenha um JWT válido no Supabase.
+2. Clique em Authorize.
+3. Informe:
+
+```text
+Bearer <token>
+```
+
+4. Execute os endpoints normalmente.
+
+---
+
+## Como Executar Localmente
+
+### Pré-requisitos
+
+- OpenJDK 21
+- Maven 3.9+
+- MySQL 8 ou MariaDB
+
+### Banco
 
 ```sql
 CREATE DATABASE apiJogosBD;
 ```
 
-Você pode criar utilizando:
+### Configuração
 
-- MySQL Workbench
-- DBeaver
-- terminal MySQL
-- phpMyAdmin
+Arquivo:
 
----
-
-### Configure o banco de dados
-
-Entre na pasta:
-
-```txt
-src/main/resources
+```text
+src/main/resources/application.properties
 ```
 
-Abra o arquivo:
-
-```txt
-application.properties
-```
-
-Altere usuário e senha:
+Configure:
 
 ```properties
 spring.datasource.username=usuario
-spring.datasource.password=suasenha
+spring.datasource.password=senha
 ```
 
----
-
-### Rode a API
-
-Abra o terminal na raiz do projeto e execute:
+### Executar
 
 ```bash
 mvn spring-boot:run
 ```
-
----
-
-## Testando a API
-
-Após testar a aplicação, acesse a documentação Swagger:
-
-[🔗 Testar API no Swagger](http://localhost:35555/swagger-ui/index.html#/)

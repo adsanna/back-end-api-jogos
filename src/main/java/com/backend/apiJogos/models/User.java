@@ -1,12 +1,6 @@
 package com.backend.apiJogos.models;
 
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +15,6 @@ import lombok.ToString;
 @Table(name = "tb_usuario")
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class User {
 
     @Id
@@ -34,8 +27,13 @@ public class User {
     @Column(nullable = false, unique = true)
     private String supabaseUserId;
 
-    public User(String nome, String supabaseUserId){
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    public User(String nome, String supabaseUserId) {
         this.nome = nome;
         this.supabaseUserId = supabaseUserId;
+        this.role = Role.USER;
     }
 }
