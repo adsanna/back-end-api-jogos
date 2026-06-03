@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,65 +16,66 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        return http
-                .csrf(csrf -> csrf.disable())
+    return http
+        .csrf(csrf -> csrf.disable())
 
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll()
+        .authorizeHttpRequests(auth -> auth
 
-                        .anyRequest().authenticated()
-                )
+            .requestMatchers(
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/v3/api-docs/**")
+            .permitAll()
 
-                .exceptionHandling(ex -> ex
+            .requestMatchers(
+                HttpMethod.GET,
+                "/games/**")
+            .permitAll()
 
-                        .authenticationEntryPoint((request, response, authException) -> {
+            .anyRequest()
+            .authenticated())
 
-                            response.setStatus(401);
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        .exceptionHandling(ex -> ex
 
-                            Map<String, Object> body = Map.of(
-                                    "timestamp", LocalDateTime.now().toString(),
-                                    "status", 401,
-                                    "error", "Unauthorized",
-                                    "message", "Token inválido, expirado ou ausente",
-                                    "path", request.getRequestURI()
-                            );
+            .authenticationEntryPoint((request, response, authException) -> {
 
-                            new ObjectMapper().writeValue(response.getOutputStream(), body);
-                        })
+              response.setStatus(401);
+              response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+              Map<String, Object> body = Map.of(
+                  "timestamp", LocalDateTime.now().toString(),
+                  "status", 401,
+                  "error", "Unauthorized",
+                  "message", "Token inválido, expirado ou ausente",
+                  "path", request.getRequestURI());
 
-                            response.setStatus(403);
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+              new ObjectMapper()
+                  .writeValue(response.getOutputStream(), body);
+            })
 
-                            Map<String, Object> body = Map.of(
-                                    "timestamp", LocalDateTime.now().toString(),
-                                    "status", 403,
-                                    "error", "Forbidden",
-                                    "message", "Você não possui permissão para acessar este recurso",
-                                    "path", request.getRequestURI()
-                            );
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
 
-                            new ObjectMapper().writeValue(response.getOutputStream(), body);
-                        })
-                )
+              response.setStatus(403);
+              response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-                .oauth2ResourceServer(oauth ->
-                        oauth.jwt()
-                )
+              Map<String, Object> body = Map.of(
+                  "timestamp", LocalDateTime.now().toString(),
+                  "status", 403,
+                  "error", "Forbidden",
+                  "message", "Você não possui permissão para acessar este recurso",
+                  "path", request.getRequestURI());
 
-                .build();
-    }
+              new ObjectMapper()
+                  .writeValue(response.getOutputStream(), body);
+            }))
+
+        .oauth2ResourceServer(oauth -> oauth.jwt())
+
+        .build();
+  }
 }

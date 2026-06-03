@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.backend.apiJogos.exceptionHandler.exceptions.UserJaCadastradoException;
 import com.backend.apiJogos.exceptionHandler.exceptions.UserNotFoundException;
+import com.backend.apiJogos.exceptionHandler.exceptions.AccessDeniedException;
 import com.backend.apiJogos.exceptionHandler.exceptions.GameNotFoundException;
 import com.backend.apiJogos.exceptionHandler.exceptions.InvalidUserDataException;
 import com.backend.apiJogos.exceptionHandler.exceptions.RunEmAndamentoException;
@@ -81,6 +82,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   ResponseEntity<RestErrorMensagem> RatingException(
       com.backend.apiJogos.exceptionHandler.exceptions.RatingException ex) {
     return criarResposta(HttpStatus.CONFLICT, ex.getMessage());
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  ResponseEntity<RestErrorMensagem> AccessDeniedException(AccessDeniedException ex) {
+    return criarResposta(HttpStatus.FORBIDDEN, ex.getMessage());
   }
 
 }

@@ -1,17 +1,20 @@
 package com.backend.apiJogos.repositorys;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-import com.backend.apiJogos.models.UserGame;
 import com.backend.apiJogos.models.Status;
+import com.backend.apiJogos.models.UserGame;
 
-@Repository
 public interface UserGameRepository extends JpaRepository<UserGame, Long> {
 
-    Optional<UserGame> findTopByUserIdAndGameIdOrderByNumeroRunDesc(Long userId, Long gameId);
+  Optional<UserGame> findTopBySupabaseUserIdAndGameIdOrderByNumeroRunDesc(String supabaseUserId, Long gameId);
 
-    boolean existsByUserIdAndGameIdAndStatus(Long userId, Long gameId, Status status);
+  boolean existsBySupabaseUserIdAndGameIdAndStatus(String supabaseUserId, Long gameId, Status status);
+
+  List<UserGame> findBySupabaseUserId(String supabaseUserId);
+
+  Optional<UserGame> findByIdAndSupabaseUserId(Long id, String supabaseUserId);
 }

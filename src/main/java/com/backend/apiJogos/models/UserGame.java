@@ -11,17 +11,19 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "tb_user_game", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "game_id",
-    "numero_run" }))
+@Table(name = "tb_user_game", uniqueConstraints = @UniqueConstraint(columnNames = {
+    "supabase_user_id",
+    "game_id",
+    "numero_run"
+}))
 public class UserGame {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @Column(nullable = false)
+  private String supabaseUserId;
 
   @ManyToOne
   @JoinColumn(name = "game_id", nullable = false)
@@ -39,4 +41,5 @@ public class UserGame {
   private LocalDate dataInicio;
 
   private LocalDate dataFim;
+
 }

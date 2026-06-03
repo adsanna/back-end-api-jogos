@@ -1,6 +1,6 @@
 package com.backend.apiJogos.dtos;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.backend.apiJogos.models.Role;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -14,13 +14,8 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameDto {
+public class RoleUpdateDto {
 
-  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-  private Long id;
-
-  @NotNull(message = "O nome não pode ser nulo")
-  private String nome;
-
-  private String genero;
+    @NotNull(message = "role não pode ser nulo")
+    private Role role;
 }
