@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.backend.apiJogos.dtos.RatingDto;
 import com.backend.apiJogos.exceptionHandler.exceptions.RatingException;
-import com.backend.apiJogos.exceptionHandler.exceptions.RunNaoEncontradaException;
+import com.backend.apiJogos.exceptionHandler.exceptions.RunNotFoundException;
 import com.backend.apiJogos.models.Rating;
 import com.backend.apiJogos.models.Status;
 import com.backend.apiJogos.models.UserGame;
@@ -32,7 +32,7 @@ public class RatingServiceImpl implements RatingService {
         .findByIdAndSupabaseUserId(
             ratingDto.getUserGameId(),
             jwt.getSubject())
-        .orElseThrow(() -> new RunNaoEncontradaException());
+        .orElseThrow(() -> new RunNotFoundException());
 
     if (ratingDto.getNota() < 0 || ratingDto.getNota() > 10) {
       throw new RatingException(
