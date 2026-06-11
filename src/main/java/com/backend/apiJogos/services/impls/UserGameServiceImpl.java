@@ -8,11 +8,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import com.backend.apiJogos.dtos.UserGameDto;
-import com.backend.apiJogos.exceptionHandler.exceptions.DatasException;
+import com.backend.apiJogos.exceptionHandler.exceptions.DateException;
 import com.backend.apiJogos.exceptionHandler.exceptions.GameNotFoundException;
-import com.backend.apiJogos.exceptionHandler.exceptions.HorasException;
-import com.backend.apiJogos.exceptionHandler.exceptions.RunEmAndamentoException;
-import com.backend.apiJogos.exceptionHandler.exceptions.RunNaoEncontradaException;
+import com.backend.apiJogos.exceptionHandler.exceptions.TimeException;
+import com.backend.apiJogos.exceptionHandler.exceptions.RunInProgressException;
+import com.backend.apiJogos.exceptionHandler.exceptions.RunNotFoundException;
 import com.backend.apiJogos.exceptionHandler.exceptions.StatusException;
 import com.backend.apiJogos.models.Game;
 import com.backend.apiJogos.models.Status;
@@ -45,7 +45,7 @@ public class UserGameServiceImpl implements UserGameService {
             game.getId(),
             Status.JOGANDO)) {
 
-      throw new RunEmAndamentoException();
+      throw new RunInProgressException();
     }
 
     UserGameDto normalized = normalizarCreate(dto);
@@ -88,7 +88,7 @@ public class UserGameServiceImpl implements UserGameService {
         repo.findByIdAndSupabaseUserId(
             id,
             jwt.getSubject())
-            .orElseThrow(RunNaoEncontradaException::new));
+            .orElseThrow(RunNotFoundException::new));
   }
 
   @Override
@@ -98,14 +98,14 @@ public class UserGameServiceImpl implements UserGameService {
         .findByIdAndSupabaseUserId(
             id,
             jwt.getSubject())
-        .orElseThrow(RunNaoEncontradaException::new);
+        .orElseThrow(RunNotFoundException::new);
 
     if (entity.getStatus() == Status.FINALIZADO
         && dto.getHorasJogadas() != null
         && entity.getHorasJogadas() != null
         && dto.getHorasJogadas().compareTo(entity.getHorasJogadas()) != 0) {
 
-      throw new HorasException(
+      throw new TimeException(
           "Horas não podem ser alteradas após FINALIZADO");
     }
 
@@ -116,7 +116,7 @@ public class UserGameServiceImpl implements UserGameService {
             entity.getGame().getId(),
             Status.JOGANDO)) {
 
-      throw new RunEmAndamentoException();
+      throw new RunInProgressException();
     }
 
     validarTransicao(
@@ -142,7 +142,7 @@ public class UserGameServiceImpl implements UserGameService {
         .findByIdAndSupabaseUserId(
             id,
             jwt.getSubject())
-        .orElseThrow(RunNaoEncontradaException::new);
+        .orElseThrow(RunNotFoundException::new);
 
     repo.delete(entity);
   }
@@ -152,7 +152,7 @@ public class UserGameServiceImpl implements UserGameService {
     if (dto.getHorasJogadas() != null
         && dto.getHorasJogadas().compareTo(BigDecimal.ZERO) < 0) {
 
-      throw new HorasException(
+      throw new TimeException(
           "Horas não podem ser negativas");
     }
 
@@ -160,7 +160,7 @@ public class UserGameServiceImpl implements UserGameService {
         && dto.getDataFim() != null
         && dto.getDataFim().isBefore(dto.getDataInicio())) {
 
-      throw new DatasException(
+      throw new DateException(
           "dataFim não pode ser antes da dataInicio");
     }
 
