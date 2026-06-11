@@ -1,12 +1,12 @@
 package com.backend.apiJogos.exceptionHandler.exceptions;
 
-public class DatasException extends RuntimeException{
+public class DateException extends RuntimeException{
 
-  public DatasException(){
+  public DateException(){
     super("Conflito entre datas informadas!");
   }
 
-  public DatasException(String mensagem){
+  public DateException(String mensagem){
     super(mensagem);
   }
 
