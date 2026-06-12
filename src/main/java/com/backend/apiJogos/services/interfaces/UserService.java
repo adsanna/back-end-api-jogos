@@ -1,15 +1,17 @@
 package com.backend.apiJogos.services.interfaces;
 
 import java.util.List;
-import java.util.UUID;
+import org.springframework.security.oauth2.jwt.Jwt;
 
+import com.backend.apiJogos.dtos.RoleUpdateDto;
 import com.backend.apiJogos.dtos.UserDto;
+import com.backend.apiJogos.dtos.UserPublicDto;
 
 public interface UserService {
-    UserDto criarUsuario(UserDto userDto);
-    UserDto editarPorId(UserDto userDto, UUID id);
-    List<UserDto> listarUsuarios();
-    UserDto buscarPorId (UUID id);
-    List<UserDto>buscarPorNome(String nome);
-    void deletarUsuario (UUID id);
+    UserDto me(Jwt jwt);
+    UserDto atualizarMeuPerfil(Jwt jwt, UserDto dto);
+    void deletarMinhaConta(Jwt jwt);
+    UserDto alterarRole(Long id, RoleUpdateDto dto, Jwt jwt);
+    List<UserDto> listar(Jwt jwt);
+    List<UserPublicDto> buscarPorNome(String nome, Jwt jwt);
 }

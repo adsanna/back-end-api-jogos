@@ -1,21 +1,22 @@
 package com.backend.apiJogos.services.interfaces;
 
 import java.util.List;
-import java.util.UUID;
+
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import com.backend.apiJogos.dtos.GameDto;
 
 public interface GameService {
-    GameDto criar (GameDto gameDto);
 
-    List<GameDto> listar();
+  GameDto criar(GameDto gameDto, Jwt jwt);
 
-    GameDto buscarPorId(UUID id);
+  List<GameDto> listar();
 
-    void deletar(UUID id);
+  GameDto buscarPorId(Long id);
 
-    GameDto editar(UUID id, GameDto gameDto);
+  void deletar(Long id, Jwt jwt);
 
-    List<GameDto> buscarPorNome(String nome);
+  GameDto editar(Long id, GameDto gameDto, Jwt jwt);
 
+  List<GameDto> buscarPorNome(String nome);
 }

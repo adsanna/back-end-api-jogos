@@ -3,7 +3,7 @@ package com.backend.apiJogos.exceptionHandler.exceptions;
 public class UserNotFoundException extends RuntimeException {
 
   public UserNotFoundException() {
-    super("Usuário não encontrado");
+    super("Usuário não encontrado!");
   }
 
   public UserNotFoundException(String mensagem) {

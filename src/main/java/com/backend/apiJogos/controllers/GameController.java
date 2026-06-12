@@ -1,10 +1,11 @@
 package com.backend.apiJogos.controllers;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,54 +14,81 @@ import com.backend.apiJogos.services.interfaces.GameService;
 
 import jakarta.validation.Valid;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/games")
 public class GameController {
-    private final GameService gameService;
 
-    public GameController(GameService gameService){
-        this.gameService = gameService;
+  private final GameService gameService;
+
+  public GameController(GameService gameService) {
+    this.gameService = gameService;
+  }
+
+  @PostMapping
+  public ResponseEntity<?> criar(
+      @RequestBody @Valid GameDto gameDto,
+      BindingResult bd,
+      @AuthenticationPrincipal Jwt jwt) {
+
+    if (bd.hasErrors()) {
+      return ResponseEntity.badRequest().body(bd.getAllErrors());
     }
-    @PostMapping
-    public GameDto criar(@RequestBody @Valid GameDto gameDto){
-        return gameService.criar(gameDto);
-    }
-    @GetMapping
-    public List<GameDto> listar(){
-        return gameService.listar();
-    }
-    @GetMapping("/buscar-id/{id}")
-    public GameDto buscarPorId(@PathVariable UUID id){
-       return gameService.buscarPorId(id);
-    }
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable UUID id){
-        gameService.deletar(id);
-    }
+
+    GameDto gameSalvo = gameService.criar(gameDto, jwt);
+
+    return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .body(gameSalvo);
+  }
+
+  @GetMapping
+  public ResponseEntity<List<GameDto>> listar() {
+
+    return ResponseEntity.ok(
+        gameService.listar());
+  }
+
+  @GetMapping("/buscar-id/{id}")
+  public ResponseEntity<GameDto> buscarPorId(
+      @PathVariable Long id) {
+
+    return ResponseEntity.ok(
+        gameService.buscarPorId(id));
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deletar(
+      @PathVariable Long id,
+      @AuthenticationPrincipal Jwt jwt) {
+
+    gameService.deletar(id, jwt);
+
+    return ResponseEntity.noContent().build();
+  }
 
   @PutMapping("/{id}")
-  public ResponseEntity<?> editar(@RequestBody @Valid GameDto gameDto, BindingResult br, @PathVariable UUID id){
-    if(br.hasErrors()){
+  public ResponseEntity<?> editar(
+      @RequestBody @Valid GameDto gameDto,
+      BindingResult br,
+      @PathVariable Long id,
+      @AuthenticationPrincipal Jwt jwt) {
+
+    if (br.hasErrors()) {
       return ResponseEntity.badRequest().body(br.getAllErrors());
     }
 
-    GameDto gameEditado = gameService.editar(id, gameDto);
-
-    return ResponseEntity.status(HttpStatus.OK).body(gameEditado);
+    return ResponseEntity.ok(
+        gameService.editar(id, gameDto, jwt));
   }
 
   @GetMapping("/buscar-nome/{nome}")
-  public ResponseEntity<List<GameDto>> buscarPorNome(@PathVariable String nome){
-    List<GameDto> lista = gameService.buscarPorNome(nome);
-    return ResponseEntity.ok(lista);
+  public ResponseEntity<List<GameDto>> buscarPorNome(
+      @PathVariable String nome) {
 
+    return ResponseEntity.ok(
+        gameService.buscarPorNome(nome));
   }
-
-
-
-
-
-
-
-
 }

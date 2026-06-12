@@ -1,66 +1,63 @@
 package com.backend.apiJogos.controllers;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import com.backend.apiJogos.dtos.RoleUpdateDto;
+import com.backend.apiJogos.dtos.UserPublicDto;
 import com.backend.apiJogos.dtos.UserDto;
 import com.backend.apiJogos.services.interfaces.UserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserService userService;
 
-    public UserController(UserService userService){
-        this.userService = userService;
-    }
-    @PostMapping
-    public UserDto criar(@RequestBody UserDto userDto){
-        return userService.criarUsuario(userDto);
-    }
-    @GetMapping
-    public List<UserDto> listar(){
-        return userService.listarUsuarios();
-    }
-    @GetMapping("/buscar-id/{id}")
-    public UserDto buscarPorId(@PathVariable UUID id){
-       return userService.buscarPorId(id);
-    }
-    @DeleteMapping("/{id}")
-    public void deletar(@PathVariable UUID id){
-        userService.deletarUsuario(id);
-    }
+  private final UserService userService;
 
-  @PutMapping("/{id}")
-  public ResponseEntity<?> editar(@RequestBody @Valid UserDto uDto, BindingResult br, @PathVariable UUID id){
-    if(br.hasErrors()){
-      return ResponseEntity.badRequest().body(br.getAllErrors());
-    }
+  public UserController(UserService userService) {
+    this.userService = userService;
+  }
 
-    UserDto userEditado = userService.editarPorId(uDto, id);
+  @GetMapping("/me")
+  public ResponseEntity<UserDto> me(@AuthenticationPrincipal Jwt jwt) {
+    return ResponseEntity.ok(userService.me(jwt));
+  }
 
-    return ResponseEntity.status(HttpStatus.OK).body(userEditado);
+  @PutMapping("/me")
+  public ResponseEntity<UserDto> atualizar(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid UserDto dto) {
+    return ResponseEntity.ok(
+        userService.atualizarMeuPerfil(jwt, dto));
+  }
+
+  @DeleteMapping("/me")
+  public ResponseEntity<Void> deletar(@AuthenticationPrincipal Jwt jwt) {
+    userService.deletarMinhaConta(jwt);
+    return ResponseEntity.noContent().build();
+  }
+
+  @PatchMapping("/{id}/role")
+  public ResponseEntity<UserDto> alterarRole(@PathVariable Long id, @RequestBody @Valid RoleUpdateDto dto,
+      @AuthenticationPrincipal Jwt jwt) {
+    return ResponseEntity.ok(
+        userService.alterarRole(id, dto, jwt));
+  }
+
+  @GetMapping
+  public ResponseEntity<java.util.List<UserDto>> listar(@AuthenticationPrincipal Jwt jwt) {
+    return ResponseEntity.ok(
+        userService.listar(jwt));
   }
 
   @GetMapping("/buscar-nome/{nome}")
-  public ResponseEntity<List<?>> buscarPorNome(@PathVariable String nome){
-    List<UserDto> listaAproximada = userService.buscarPorNome(nome);
-    return ResponseEntity.ok().body(listaAproximada);
-
+  public ResponseEntity<java.util.List<UserPublicDto>> buscarPorNome(@PathVariable String nome,
+      @AuthenticationPrincipal Jwt jwt) {
+    return ResponseEntity.ok(userService.buscarPorNome(nome, jwt));
   }
-
-
-
-
-
-
-
 
 }
